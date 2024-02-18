@@ -37,9 +37,9 @@ testcases = [
 
 
 function check(src::String, rule, expected)
-    ast = PEG.parse_whole(rule, Minia.rm_space(src))
+    ast = PEG.parse_whole(rule, Minia.preprocess(src))
     result = eval(ast)
-    success = expected == "ANYWAY" ? true : result == expected
+    success = result == expected
     return onfail(@test success) do
         @info "Failed. Expected: $expected, got: $result"
         @info "AST: $ast"

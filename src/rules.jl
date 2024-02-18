@@ -1,5 +1,4 @@
 using PEG
-PEG.setdebug!(true)
 
 @rule program = (expr, newline)[*] |> parse_program
 @rule expr = assign, call, relational, _if, _while, _function, seq
@@ -143,6 +142,6 @@ end
 
 
 # スペースを削除. 改行はそのまま
-function rm_space(s::AbstractString)
+function preprocess(s::AbstractString)
     return join(filter(x -> x != ' ', s))
 end
