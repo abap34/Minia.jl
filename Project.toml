@@ -3,6 +3,9 @@ uuid = "fa43461c-3768-4c31-876a-d242d0244bb3"
 authors = ["abap34 <uchi_ymgc@her0.jp> and contributors"]
 version = "1.0.0-DEV"
 
+[deps]
+PEG = "12d937ae-5f68-53be-93c9-3a6f997a20a8"
+
 [compat]
 julia = "1.10"
 
