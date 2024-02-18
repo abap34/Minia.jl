@@ -10,7 +10,7 @@ end
 
 
 function parse(filename::AbstractString)
-    S = load(filename) |> rm_space
+    S = load(filename) |> preprocess
     return PEG.parse_whole(program, S)
 end
 
