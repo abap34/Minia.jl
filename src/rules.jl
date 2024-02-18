@@ -27,12 +27,33 @@ function parse_program(w)
     return Expr(:let, (filter(x -> x !== nothing, w))...)
 end
 
+function parse_function(w)
+    name = w[2]
+    arg = w[4]
+    body = w[6]
+    return Expr(:function, Expr(:call, name, arg), body)
+end
+
 
 function parse_if(w)
     cond = w[3]
     body = w[6]
     else_body = w[10]
     return Expr(:if, cond, body, else_body)
+end
+
+
+function parse_while(w)
+    cond = w[3]
+    body = w[5]
+    return Expr(:while, cond, body)
+end
+
+
+function parse_call(w)
+    ident = w[1]
+    expr = w[3]
+    return Expr(:call, ident, expr)
 end
 
 
@@ -43,59 +64,11 @@ function parse_seq(w)
 end
 
 
-function parse_call(w)
-    ident = w[1]
-    expr = w[3]
-    return Expr(:call, ident, expr)
-end
-
-function debug(x)
-    return x
-end
 
 function parse_assign(w)
     ident = w[1]
     expr = w[3]
     return Expr(:(=), ident, expr)
-end
-
-
-function rec_join(arr::AbstractArray)
-    return join(map(rec_join, arr))
-end
-
-function rec_join(s::AbstractString)
-    return s
-end
-
-
-function parse_ident(w)
-    # return Expr(:global, Symbol(w))
-    return Symbol(w)
-end
-
-
-parse_int(w::AbstractArray) = parse_int(rec_join(w))
-parse_int(w::AbstractString) = Meta.parse(w)
-
-parse_float(w::AbstractArray) = parse_float(rec_join(w))
-parse_float(w::AbstractString) = Meta.parse(w)
-
-
-
-function parse_function(w)
-    name = w[2]
-    arg = w[4]
-    body = w[6]
-    return Expr(:function, Expr(:call, name, arg), body)
-end
-
-
-
-function parse_while(w)
-    cond = w[3]
-    body = w[5]
-    return Expr(:while, cond, body)
 end
 
 
@@ -110,7 +83,7 @@ as_opsymbols = Dict(
     "==" => :(==),
     "!=" => :(!=),
     "<=" => :(<=),
-    "=>" => :(>=)
+    ">=" => :(>=)
 )
 
 
@@ -122,6 +95,23 @@ function parse_binop(w)
     end
     return lhs
 end
+
+
+
+function rec_join(arr::AbstractArray)
+    return join(map(rec_join, arr))
+end
+
+function rec_join(s::AbstractString)
+    return s
+end
+
+
+parse_int(w::AbstractArray) = parse_int(rec_join(w))
+parse_int(w::AbstractString) = Meta.parse(w)
+
+parse_float(w::AbstractArray) = parse_float(rec_join(w))
+parse_float(w::AbstractString) = Meta.parse(w)
 
 
 function parse_unary((op, expr))
@@ -144,11 +134,15 @@ function parse_relational((lhs, op, rhs))
     end
 end
 
+
+
+function parse_ident(w)
+    return Symbol(w)
+end
+
+
+
 # スペースを削除. 改行はそのまま
 function rm_space(s::AbstractString)
     return join(filter(x -> x != ' ', s))
-end
-
-function parse_it(rule, src)
-    return PEG.parse_whole(rule, src |> string |> rm_space)
 end
