@@ -1,5 +1,25 @@
+using PEG
+
 module Minia
 
-# Write your package code here.
+include("rules.jl")
+
+function load(filename::AbstractString)
+    return join(readlines(filename), "\n")
+end
+
+
+function parse(filename::AbstractString)
+    S = load(filename) |> rm_space
+    return PEG.parse_whole(program, S)
+end
+
+
+function run(filename::AbstractString)
+    ast = parse(filename)
+    return eval(ast)
+end
+
+
 
 end
