@@ -23,7 +23,8 @@ using PEG
 @rule newline = "\n" |> (w -> nothing)
 
 function build_program(w)
-    return Expr(:let, (filter(x -> x !== nothing, w))...)
+    exprs = filter(x -> x !== nothing, w)
+    return Expr(:let, Expr(:block), Expr(:block, exprs...))
 end
 
 function build_function(w)
@@ -126,8 +127,3 @@ function build_ident(w)
 end
 
 
-
-# スペースを削除. 改行はそのまま
-function preprocess(s::AbstractString)
-    return join(filter(x -> x != ' ', s))
-end
