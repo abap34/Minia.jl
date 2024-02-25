@@ -3,11 +3,7 @@ using PEG
 module Minia
 
 include("rules.jl")
-
-
-function dropspaces(s::AbstractString)
-    return join(filter(x -> x != ' ', s))
-end
+include("builder.jl")
 
 
 function load(filename::AbstractString)
@@ -15,14 +11,14 @@ function load(filename::AbstractString)
 end
 
 
-function _parse(src::String; rule=program, preprocess=dropspaces)
-    return PEG.parse_whole(rule, preprocess(src))
+function _parse(src::String; rule=program)
+    return PEG.parse_whole(rule, src)
 end
 
 
-function parse(filename::AbstractString; rule=program, preprocess=dropspaces)
+function parse(filename::AbstractString; rule=program)
     S = load(filename)
-    return _parse(S, rule=rule, preprocess=preprocess)
+    return _parse(S, rule=rule)
 end
 
 
