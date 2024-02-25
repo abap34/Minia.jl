@@ -47,7 +47,7 @@ end
 
 function build_call(w::AbstractArray)
     name = w[1]
-    args = w[2]
+    args = w[3]
     return Expr(:call, name, args...)
 end
 
@@ -125,7 +125,6 @@ end
 function build_while(w)
     cond = w[3]
     body = w[5]
-    @show body
     return Expr(:while, cond, body)
 end
 
