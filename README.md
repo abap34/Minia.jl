@@ -35,7 +35,7 @@ Minia.run("path/to/file.minia")
 
 `fizzbuzz.minia`:
 
-```javascript
+```julia
 function fizzbuzz(n) {
     i = 0
     while (i < 100){
@@ -63,70 +63,77 @@ Expr
   head: Symbol let
   args: Array{Any}((2,))
     1: Expr
-      head: Symbol =
-      args: Array{Any}((2,))
-        1: Symbol i
-        2: Int64 0
+      head: Symbol block
+      args: Array{Any}((0,))
     2: Expr
-      head: Symbol while
+      head: Symbol block
       args: Array{Any}((2,))
         1: Expr
-          head: Symbol call
-          args: Array{Any}((3,))
-            1: Symbol <
-            2: Symbol i
-            3: Int64 100
-        2: Expr
-          head: Symbol block
-          args: Array{Any}((4,))
+          head: Symbol function
+          args: Array{Any}((2,))
             1: Expr
-              head: Symbol if
-              args: Array{Any}((3,))
-                1: Expr
-                2: Expr
-                3: Expr
-            2: Expr
-              head: Symbol if
-              args: Array{Any}((3,))
-                1: Expr
-                2: Expr
-                3: Expr
-            3: Expr
-              head: Symbol if
-              args: Array{Any}((3,))
-                1: Expr
-                2: Expr
-                3: Expr
-            4: Expr
-              head: Symbol =
+              head: Symbol call
               args: Array{Any}((2,))
-                1: Symbol i
+                1: Symbol fizzbuzz
+                2: Symbol n
+            2: Expr
+              head: Symbol block
+              args: Array{Any}((2,))
+                1: Expr
                 2: Expr
+        2: Expr
+          head: Symbol call
+          args: Array{Any}((2,))
+            1: Symbol fizzbuzz
+            2: Int64 100
 ```
 
-これは Juliaのコードで言うと以下のようなものになります:
+つまり、以下のようなコードが得られています:
+
 
 ```julia
 julia> Minia.parse("fizzbuzz.minia") |> println
-let i = 0
-    while i < 100
-        if i % 3 == 0
-            println("Fizz")
-        else
-            0
+let
+    function fizzbuzz(n)
+        i = 0
+        while i < 100
+            i = i + 1
+            if i % 15 == 0
+                println("FizzBuzz")
+            elseif i % 3 == 0
+                println("Fizz")
+            elseif i % 5 == 0
+                println("Buzz")
+            else
+                println(i)
+            end
         end
-        if i % 5 == 0
-            println("Buzz")
-        else
-            0
-        end
-        if i % 15 == 0
-            println("FizzBuzz")
-        else
-            0
-        end
-        i = i + 1
     end
+    fizzbuzz(100)
 end
+```
+
+
+なので、実行すると以下のようになります:
+
+
+```julia
+julia> Minia.run("fizzbuzz.minia")
+1
+2
+Fizz
+4
+Buzz
+Fizz
+7
+8
+Fizz
+Buzz
+11
+Fizz
+13
+14
+FizzBuzz
+16
 ```
 
