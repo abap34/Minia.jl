@@ -1,129 +1,110 @@
 using PEG
 
-@rule program = (expr, newline)[*] |> build_program
-@rule expr = assign, call, relational, _if, _while, _function, seq
-@rule _function = ("function" & ident & "(" & ident & ")" & seq) |> build_function
-@rule _if = ("if" & "(" & expr & ")" & maynewline & seq & maynewline & "else" & maynewline & seq) |> build_if
-@rule _while = ("while" & "(" & expr & ")" & seq) |> build_while
-@rule seq = ("{" & maynewline & (expr&"\n")[*] & "}" & maynewline) |> build_seq
-@rule call = (ident & "(" & expr & ")") |> build_call
-@rule assign = (ident & "=" & expr) |> build_assign
-@rule relational = (add & (("!=", "<=", "=<", ">", "<", "==")&add)[*]) |> build_binop
-@rule add = (mul & (("+", "-")&mul)[*]) |> build_binop
-@rule mul = (unary & (("*", "/", "%")&unary)[*]) |> build_binop
-@rule unary = (("+", "-")[:?] & primary) |> build_unary
-@rule primary = (num, str, ident, "(" & expr & ")") |> identity
-@rule ident = r"^(?!.*(function|if|else|while))[a-zA-Z_][a-zA-Z0-9_]*" |> build_ident
+@rule bool = (
+    r"true"p,
+    r"false"p
+) |> build_bool
+
+
+@rule str = (
+    "\"" & r"[^\"]"[*] & "\""
+) |> build_str
+
+
+@rule int = (
+    r"0"p,
+    r"[1-9]" & r"[0-9]*"p
+) |> build_int
+
+
+@rule float = (
+    r"[0-9]+" & r"\." & r"[0-9]+"p
+) |> build_float
+
+
 @rule num = float, int
-@rule str = ("\"" & r"[^\"]"[*] & "\"") |> (w -> getindex(w, 2)) |> join
-@rule int = (r"0", r"[0-9]"[+]) |> build_int
-@rule float = (r"[0-9]"[+] & "." & r"[0-9]"[+]) |> build_float
-@rule fail = r"[^\n]"[*] |> (w -> error("Failed to parse: $w"))
-@rule maynewline = "\n"[:?]
-@rule newline = "\n" |> (w -> nothing)
-
-function build_program(w)
-    exprs = filter(x -> x !== nothing, w)
-    return Expr(:let, Expr(:block), Expr(:block, exprs...))
-end
-
-function build_function(w)
-    name = w[2]
-    arg = w[4]
-    body = w[6]
-    return Expr(:function, Expr(:call, name, arg), body)
-end
 
 
-function build_if(w)
-    cond = w[3]
-    body = w[6]
-    else_body = w[10]
-    return Expr(:if, cond, body, else_body)
-end
+@rule ident = (
+    r"^(?!.*(function|if|else|while|return|function|return|true))[a-zA-Z_][a-zA-Z0-9_]*"p 
+) |> build_ident
 
 
-function build_while(w)
-    cond = w[3]
-    body = w[5]
-    return Expr(:while, cond, body)
-end
+@rule primary = (
+    num, 
+    str,
+    bool,
+    ident, 
+) 
 
 
-function build_call(w)
-    ident = w[1]
-    expr = w[3]
-    return Expr(:call, ident, expr)
-end
+@rule unary = (
+    r"-"[:?] & primary
+) |> build_unary
 
 
-function build_seq(w)
-    body = w[3]
-    exprs = [line[1] for line in body]
-    return Expr(:block, exprs...)
-end
+@rule mul = (
+    unary & ((r"\*"p, r"/"p, r"%"p) & unary)[*]
+) |> build_binop
 
 
-
-function build_assign(w)
-    ident = w[1]
-    expr = w[3]
-    return Expr(:(=), ident, expr)
-end
+@rule add = (
+    mul & ((r"\+"p, r"-"p) & mul)[*]
+) |> build_binop
 
 
-as_opsymbols = Dict(
-    "+" => :+,
-    "-" => :-,
-    "*" => :*,
-    "/" => :/,
-    "%" => :%,
-    ">" => :(>),
-    "<" => :(<),
-    "==" => :(==),
-    "!=" => :(!=),
-    "<=" => :(<=),
-    ">=" => :(>=)
-)
+@rule relational = (
+    add & ((r"!="p, r"<="p, r"=<"p, r">"p, r"<"p, r"=="p) & add)[*]
+) |> build_binop
 
 
-function build_binop(w)
-    lhs = w[1]
-    for ex in w[2]
-        op, rhs = ex
-        lhs = Expr(:call, as_opsymbols[op], lhs, rhs)
-    end
-    return lhs
-end
+@rule assign = (
+    ident & r"="p & expr
+) |> build_assign
 
 
-
-function rec_join(arr::AbstractArray)
-    return join(map(rec_join, arr))
-end
-
-function rec_join(s::AbstractString)
-    return s
-end
+@rule args = (
+    (expr & (r","p & expr)[*])
+) |> build_args
 
 
-build_int(w::AbstractArray) = build_int(rec_join(w))
-build_int(w::AbstractString) = Meta.parse(w)
-
-build_float(w::AbstractArray) = build_float(rec_join(w))
-build_float(w::AbstractString) = Meta.parse(w)
+@rule call = (
+    ident & r"\("p & args & r"\)"p
+) |> build_call
 
 
-function build_unary((op, expr))
-    if op == ["-"]
-        return Expr(:call, :(-), expr)
-    else
-        return expr
-    end
-end
+@rule seq = (
+    r"\{"p & expr[*] & r"\}"p
+) |> build_seq
 
-function build_ident(w)
-    return Symbol(w)
-end
+
+@rule _if = (
+    r"if"p & r"\("p & expr & r"\)"p & seq & (r"elseif"p & r"\("p & expr & r"\)"p & seq)[*] & (r"else"p & seq)[:?]
+) |> build_if
+
+
+@rule argnames = (
+    ident & (r","p & ident)[*]
+) |> build_argnames
+
+
+@rule _function = (
+    r"function"p & ident & r"\("p & argnames & r"\)"p & seq
+) |> build_function
+
+
+@rule _while = (
+    r"while"p & r"\("p & expr & r"\)"p & seq
+) |> build_while
+
+
+@rule _return = (
+    r"return"p & expr
+) |> build_return
+
+
+@rule expr = assign, call, relational, _if, _while, _function, seq, _return
+
+@rule program = expr[*] |> build_program
 
 
