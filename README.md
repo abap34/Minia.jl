@@ -12,7 +12,7 @@ Minia.jl は、ソースコードをJuliaのASTに変換し、それを実行し
 
 文法はだいたい https://github.com/momeemt/minim に沿っています。
 
-
+詳細は　`src/rules.jl` を参照してください。
 
 
 # Install
@@ -35,29 +35,24 @@ Minia.run("path/to/file.minia")
 
 `fizzbuzz.minia`:
 
-```c++
-i = 0
-while (i < 100) {
-    if (i % 3 == 0) {
-        println("Fizz")
-    } else {
-        0
+```javascript
+function fizzbuzz(n) {
+    i = 0
+    while (i < 100){
+        i = i + 1
+        if (i % 15 == 0) {
+            println("FizzBuzz")
+        } elseif (i % 3 == 0) {
+            println("Fizz")
+        } elseif (i % 5 == 0) {
+            println("Buzz")
+        } else {
+            println(i)
+        }
     }
-
-    if (i % 5 == 0) {
-        println("Buzz")
-    } else {
-        0
-    }
-
-    if (i % 15 == 0) {
-        println("FizzBuzz")
-    } else {
-        0
-    }
-
-    i = i + 1
 }
+
+fizzbuzz(100)
 ```
 
 これを `Minia.parse` に渡すと、以下のようなASTが得られます:
