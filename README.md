@@ -7,10 +7,13 @@
 
 https://github.com/kmizu/minis と https://github.com/momeemt/minim を参考に作ったJulia製のインタプリタです。
 
+内容は [3時間で作る自作言語のJuliaトランスパイラ](https://www.abap34.com/posts/mini-lang.html) を参照してください。
+
 Minia.jl は、ソースコードをJuliaのASTに変換し、それを実行します。
 
 
-文法はだいたい https://github.com/momeemt/minim に沿っています。
+文法はだいたい https://github.com/momeemt/minim に沿っていますが、
+`else` の省略, `elseif`, `return` の追加などを行っています。
 
 詳細は　`src/rules.jl` を参照してください。
 
